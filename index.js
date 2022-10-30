@@ -2,35 +2,61 @@ const express = require('express');
 const bodyParser = require('body-parser');
 require("dotenv").config();
 const axios = require('axios');
-
-const telegram = require('./controllers/teligramBot');
-
 var app = express();
 
-// const { licenseAPI, licenseRegister, licenseReport, clear } = require('./controllers/licenseAPI');
-// const setup = require('./controllers/setup').setup;
+
+//Telegram Bot
+const telegram = require('./controllers/telegramBot');
+
+//Discord Bot
+const discordBot = require('./controllers/discordBot.js');
+let Discord = new discordBot();
+Discord.start();
 
 app.use(express.json());
 app.use(bodyParser.raw());
 app.use(bodyParser.text()); app.use(express.urlencoded({ extended: true }));
 
-app.get('/test', async (req, res) => {
-    // console.log("🚀 ~ file: index.js ~ line 14 ~ app.post ~ req", req);   
-    // process.env.TELEGRAM_TOKEN
-    // console.log(process.env.TELEGRAM_TOKEN)
-    let data = await telegram.sendMessage('-1001531844466',"group test");
-    console.log("🚀 ~ file: index.js ~ line 22 ~ app.get ~ data", data)
-    res.json({ state: "ok", msg: "" });
+app.get('/', async (req, res) => {
+    res.send("ok");
 })
+app.post('/telegram-gateway', async (req, res) => {
+    try {
+        if (req.body.pass == process.env.GATEWAY_PASS) {
+            let data = await telegram.sendMessage(req.body.channel, req.body.message);
+        } else {
+            res.json({ state: "error" });
+            return;
+        }
+        res.json({ state: "ok", msg: "" });
+    } catch (error) {
+        res.json({ state: "error" });
+        console.log(error);
+    }
+})
+
+//Telegram Webhook handler
 app.post('/telegram_wh', async (req, res) => {
-    console.log("---------------");   
-    console.log(req.body);   
-    // process.env.TELEGRAM_TOKEN
-    // console.log(process.env.TELEGRAM_TOKEN)
-    
+    // console.log(req.body); //DEBUG
+    try {
+        if (req.body.message.chat.id == process.env.TELEGRAM_GROUP_ID) {
+            Discord.client.channels.cache
+                .get(process.env.DISCORD_CHANNEL_ID)
+                .send(`**${req.body.message.from.first_name}** on *Telegram*\n${req.body.message.text}`);
+        }
+    } catch (error) {
+        console.log(error);
+    }
     res.sendStatus(200);
 })
 
-telegram.setWebhook(process.env.SERVER_ADDRESS+"/telegram_wh");
+
+// Register telegram webhook
+telegram.setWebhook(process.env.SERVER_ADDRESS + "/telegram_wh");
+
+
+//start server
 app.listen(process.env.PORT);
+
+// DEV
 // lt --port 80 --subdomain swmaxtel

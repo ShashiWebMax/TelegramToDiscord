@@ -14,7 +14,7 @@ exports.sendMessage = async function(chat_id,message){
 exports.setWebhook = async function(url){
     let  response = await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/setWebhook`, { url: url });
     try{
-        console.log("🚀 ~ file: teligramBot.js ~ line 18 ~ exports.setWebhook=function ~ response.data;", response.data)
+        console.log(response.data)
     }catch (e){
         console.log(e);       
         
