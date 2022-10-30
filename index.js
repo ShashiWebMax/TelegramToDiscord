@@ -58,5 +58,4 @@ telegram.setWebhook(process.env.SERVER_ADDRESS + "/telegram_wh");
 //start server
 app.listen(process.env.PORT);
 
-// DEV
-// lt --port 80 --subdomain swmaxtel
+
